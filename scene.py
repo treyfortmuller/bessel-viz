@@ -81,12 +81,11 @@ class ParaSurface(ThreeDScene):
         self.add(axes, surface)
 
 class BesselSurface(Surface):
-    def __init__(self, boundary, order, mode):
+    def __init__(self, boundary, order, mode, time):
         self.boundary = boundary
         self.order = order
         self.mode = mode
-    
-        self.t = 0
+        self.time = time
 
         super().__init__(
             self.func,
@@ -99,19 +98,20 @@ class BesselSurface(Surface):
         zero = special.jn_zeros(self.order, self.mode)[self.mode - 1]
         return zero / self.boundary
 
-    def set_time(self, delta_time):
-        self.t += delta_time
-        print(f"total time: {self.t}")
+    # def set_time(self, delta_time):
+    #     self.t += delta_time
+    #     print(f"total time: {self.t}")
 
     def func(self, u, v):
+        # print(f"modal freq {self.modal_freq()}")
+
         r, phi = u, v
         z = (
             special.jv(self.order, self.modal_freq() * r)
             * np.cos(self.order * phi)
-            * np.cos(self.modal_freq() * self.t)
+            * np.cos(self.modal_freq() * self.time)
         )
         return np.array([r * np.cos(phi), r * np.sin(phi), z])
-
 
 class BesselScene(ThreeDScene):
     def construct(self):
@@ -120,17 +120,29 @@ class BesselScene(ThreeDScene):
         # self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)
         # self.add(axes, surface)
 
+        boundary = 3
+        order = 0
+        mode = 1
+        timer = 0
+        # timer = 3.9191075501669705
+
+        # modal freq 0, 1
+        # 0.8016085192319243
+
         def vibrate(surface: BesselSurface, dt):
-            surface.set_time(dt)
+            nonlocal timer
+            timer += dt
             print(f"dt is: {dt}")
+            print(f"timer is: {timer}")
+            surface.become(BesselSurface(boundary, order, mode, timer))
 
         axes = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
-        bessel = BesselSurface(3, 1, 2)
+        bessel = BesselSurface(boundary, order, mode, timer)
         self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)        
         bessel.add_updater(vibrate)
 
         self.add(axes, bessel)
-        self.wait(3)
+        self.wait(4)
 
 
 # class Vibrate(Animation):
