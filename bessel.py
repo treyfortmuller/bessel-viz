@@ -26,14 +26,6 @@ for n in range(0, 5):
         go.Scatter(x=t, y=special.jv(n, freq * t), name=f"j_{n}", mode="lines")
     )
 
-# of the second kind
-# for n in range(0, 5):
-#     fig.add_trace(go.Scatter(
-#         x=t, y=special.yn(n, t),
-#         name=f'y_{n}',
-#         mode="lines"
-#     ))
-
 fig.update_layout(
     title=f"Bessel Functions of the First Kind, boundary: {RADIUS}, mode: {MODE}",
     yaxis_zeroline=False,
