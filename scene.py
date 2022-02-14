@@ -121,8 +121,8 @@ class BesselScene(ThreeDScene):
         # self.add(axes, surface)
 
         boundary = 3
-        order = 0
-        mode = 1
+        order = 5
+        mode = 4
         timer = 0
         # timer = 3.9191075501669705
 
@@ -141,8 +141,10 @@ class BesselScene(ThreeDScene):
         self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)        
         bessel.add_updater(vibrate)
 
+        self.begin_ambient_camera_rotation(rate=0.1)
         self.add(axes, bessel)
-        self.wait(4)
+        self.wait(2)
+        self.stop_ambient_camera_rotation()
 
 
 # class Vibrate(Animation):
