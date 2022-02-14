@@ -121,17 +121,17 @@ class BesselSurface(Surface):
 #         self.add(axes, surface)
 
 
-# class Vibrate(Animation):
-#     def __init__(
-#         self, surface: BesselSurface, start: float, end: float, **kwargs
-#     ) -> None:
-#         super().__init__(surface, **kwargs)
-#         self.start = start
-#         self.end = end
+class Vibrate(Animation):
+    def __init__(
+        self, surface: BesselSurface, start: float, end: float, **kwargs
+    ) -> None:
+        super().__init__(surface, **kwargs)
+        self.start = start
+        self.end = end
 
-#     def interpolate_mobject(self, alpha: float) -> None:
-#         time = self.start + (alpha * (self.end - self.start))
-#         self.mobject.set_time(time)
+    def interpolate_mobject(self, alpha: float) -> None:
+        time = self.start + (alpha * (self.end - self.start))
+        self.mobject.set_time(time)
 
 
 class VibratingMembrane(ThreeDScene):
