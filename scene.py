@@ -85,6 +85,8 @@ class BesselSurface(Surface):
         self.boundary = boundary
         self.order = order
         self.mode = mode
+    
+        self.t = 0
 
         super().__init__(
             self.func,
@@ -97,18 +99,38 @@ class BesselSurface(Surface):
         zero = special.jn_zeros(self.order, self.mode)[self.mode - 1]
         return zero / self.boundary
 
+    def set_time(self, delta_time):
+        self.t += delta_time
+        print(f"total time: {self.t}")
+
     def func(self, u, v):
         r, phi = u, v
-        z = special.jv(self.order, self.modal_freq() * r) * np.cos(self.order * phi),
-        return np.array([r * np.cos(phi), r * np.sin(phi), z[0]])
+        z = (
+            special.jv(self.order, self.modal_freq() * r)
+            * np.cos(self.order * phi)
+            * np.cos(self.modal_freq() * self.t)
+        )
+        return np.array([r * np.cos(phi), r * np.sin(phi), z])
 
 
 class BesselScene(ThreeDScene):
     def construct(self):
+        # axes = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
+        # surface = BesselSurface(1, 1, 2)
+        # self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)
+        # self.add(axes, surface)
+
+        def vibrate(surface: BesselSurface, dt):
+            surface.set_time(dt)
+            print(f"dt is: {dt}")
+
         axes = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
-        surface = BesselSurface(1, 1, 2)
-        self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)
-        self.add(axes, surface)
+        bessel = BesselSurface(3, 1, 2)
+        self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)        
+        bessel.add_updater(vibrate)
+
+        self.add(axes, bessel)
+        self.wait(3)
 
 
 # class Vibrate(Animation):
