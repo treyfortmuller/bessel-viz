@@ -27,7 +27,7 @@ class BesselSurface(Surface):
         return np.array([r * np.cos(phi), r * np.sin(phi), z])
 
 
-class BesselScene(ThreeDScene):
+class SingleBesselScene(ThreeDScene):
     def construct(self):
         BOUNDARY = 3
         ORDER = 5
@@ -58,20 +58,19 @@ class BesselScene(ThreeDScene):
 
         self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)
 
+        # Start the ambient camera rotation.
         self.begin_ambient_camera_rotation(rate=0.1)
-        # self.add(surface_group)
 
-        self.play(FadeIn(axes, bessel))
+        # Fade in the surface and axes, TODO this isn't fading in the surface...
+        self.play(FadeIn(axes), Create(bessel))
 
-        # self.add_fixed_in_frame_mobjects(order_and_mode.align_to(surface_group, DOWN))
+        # This is the janky way to make a mob fixed in frame but not appear
         self.add_fixed_in_frame_mobjects(order_and_mode)
         self.remove(order_and_mode)
-        # self.play(Write(order_and_mode.align_to(surface_group, DOWN)))
 
-        # VGroup(surface_group, order_and_mode).arrange(DOWN)
+        # Add the order and mode label to the surface group and render it
+        surface_group.add(order_and_mode)
         self.play(Write(order_and_mode.move_to(np.array([0, -3.0, 0]))))
 
-        self.wait(2)
+        self.wait(5)
         self.stop_ambient_camera_rotation()
-
-        # align_to(mobject_or_point, direction=array([0., -1., 0.]), alignment_vect=array([0., 1., 0.]))
