@@ -4,7 +4,9 @@ from scipy import special
 
 
 class BesselSurface(Surface):
-    def __init__(self, boundary: float, orders: List[int], modes: List[int], time: float):
+    def __init__(
+        self, boundary: float, orders: List[int], modes: List[int], time: float
+    ):
         self.boundary = boundary
         self.orders = orders
         self.modes = modes
@@ -32,6 +34,7 @@ class BesselSurface(Surface):
         z /= len(self.orders)
 
         return np.array([r * np.cos(phi), r * np.sin(phi), z])
+
 
 class ComboBesselScene(ThreeDScene):
     def construct(self):
@@ -80,3 +83,72 @@ class ComboBesselScene(ThreeDScene):
 
         self.wait(5)
         self.stop_ambient_camera_rotation()
+
+
+class BesselGrid(ThreeDScene):
+    def construct(self):
+        BOUNDARY = 3
+        ORDERS = [0, 0]
+        MODES = [1, 2]
+        timer = 0
+
+        def vibrate(surface: BesselSurface, dt):
+            nonlocal timer
+            timer += dt
+            surface.become(BesselSurface(BOUNDARY, ORDERS, MODES, timer))
+
+        axes1 = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
+        axes2 = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
+        axes3 = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
+        axes4 = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
+        bessel1 = BesselSurface(BOUNDARY, [0], [1], timer)
+        bessel2 = BesselSurface(BOUNDARY, [1], [1], timer)
+        bessel3 = BesselSurface(BOUNDARY, [2], [1], timer)
+        bessel4 = BesselSurface(BOUNDARY, [3], [1], timer)
+
+        # bessel1.add_updater(vibrate)
+        # bessel2.add_updater(vibrate)
+
+        surface_group1 = VGroup(axes1, bessel1)
+        surface_group1.scale(0.3)
+        surface_group1.move_to(2 * UL)
+
+        surface_group2 = VGroup(axes2, bessel2)
+        surface_group2.scale(0.3)
+        surface_group2.move_to(2 * UR)
+
+        surface_group3 = VGroup(axes3, bessel3)
+        surface_group3.scale(0.3)
+        surface_group3.move_to(2 * DL)
+
+        surface_group4 = VGroup(axes4, bessel4)
+        surface_group4.scale(0.3)
+        surface_group4.move_to(2 * DR)
+
+        self.set_camera_orientation(theta=90 * DEGREES, phi=70 * DEGREES)
+
+        # Start the ambient camera rotation.
+        # self.begin_ambient_camera_rotation(rate=0.1)
+
+        # Fade in the surface and axes, TODO this isn't fading in the surface...
+        # self.play(FadeIn(axes), Create(bessel))
+
+        self.add(surface_group1, surface_group2, surface_group3, surface_group4)
+        self.play(
+            Rotate(surface_group1, PI/4, np.array([0, 0, 1]), run_time=2),
+            Rotate(surface_group2, -PI/4, np.array([0, 0, 1]), run_time=2),
+            Rotate(surface_group3, -PI/4, np.array([0, 0, 1]), run_time=2),
+            Rotate(surface_group4, -PI/4, np.array([0, 0, 1]), run_time=2),
+        )
+
+        # self.wait(3)
+        # self.stop_ambient_camera_rotation()
+
+        # TODO box grid example
+        # boxes=VGroup(*[Square() for s in range(0,6)])
+        # boxes.arrange_in_grid(rows=2, buff=1)
+        # self.add(boxes)
+
+        # surfaces = VGroup(*[surface_group for s in range(0, 6)])
+        # surfaces.arrange_in_grid(rows=2, buff=1)
+        # self.add(surfaces)
