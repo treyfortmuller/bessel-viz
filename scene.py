@@ -4,43 +4,49 @@ from scipy import special
 
 
 class BesselSurface(Surface):
-    def __init__(self, boundary, order, mode, time):
+    def __init__(self, boundary: float, orders: List[int], modes: List[int], time: float):
         self.boundary = boundary
-        self.order = order
-        self.mode = mode
+        self.orders = orders
+        self.modes = modes
         self.time = time
 
         super().__init__(self.func, u_range=[0, self.boundary], v_range=[0, 2 * PI])
 
-    def modal_freq(self):
+    @staticmethod
+    def modal_freq(boundary, order, mode):
         # grab the zero for the mode and order that we care about
-        zero = special.jn_zeros(self.order, self.mode)[self.mode - 1]
-        return zero / self.boundary
+        zero = special.jn_zeros(order, mode)[mode - 1]
+        return zero / boundary
 
     def func(self, u, v):
-        r, phi = u, v
-        z = (
-            special.jv(self.order, self.modal_freq() * r)
-            * np.cos(self.order * phi)
-            * np.cos(self.modal_freq() * self.time)
-        )
+        r, phi, z = u, v, 0
+
+        for i in range(0, len(self.orders)):
+            n = self.orders[i]
+            m = self.modes[i]
+
+            omega = BesselSurface.modal_freq(self.boundary, n, m)
+
+            z += special.jv(n, omega * r) * np.cos(n * phi) * np.cos(omega * self.time)
+
+        z /= len(self.orders)
+
         return np.array([r * np.cos(phi), r * np.sin(phi), z])
 
-
-class SingleBesselScene(ThreeDScene):
+class ComboBesselScene(ThreeDScene):
     def construct(self):
         BOUNDARY = 3
-        ORDER = 5
-        MODE = 4
+        ORDERS = [0, 0]
+        MODES = [1, 2]
         timer = 0
 
         def vibrate(surface: BesselSurface, dt):
             nonlocal timer
             timer += dt
-            surface.become(BesselSurface(BOUNDARY, ORDER, MODE, timer))
+            surface.become(BesselSurface(BOUNDARY, ORDERS, MODES, timer))
 
         axes = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
-        bessel = BesselSurface(BOUNDARY, ORDER, MODE, timer)
+        bessel = BesselSurface(BOUNDARY, ORDERS, MODES, timer)
         bessel.add_updater(vibrate)
 
         surface_group = VGroup(axes, bessel)
@@ -49,7 +55,7 @@ class SingleBesselScene(ThreeDScene):
         diffyq = MathTex(
             r"x^2 \frac{d^2y}{dx^2} + x \frac{dy}{dx} + (x^2 - n^2)y = 0", font_size=56
         )
-        order_and_mode = MathTex(f"n={ORDER}, m={MODE}", font_size=44)
+        order_and_mode = MathTex(f"n={ORDERS}, m={MODES}", font_size=44)
 
         self.play(Write(diffyq))
         self.play(diffyq.animate.scale(0.6))
