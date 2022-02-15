@@ -41,10 +41,37 @@ class BesselScene(ThreeDScene):
 
         axes = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
         bessel = BesselSurface(BOUNDARY, ORDER, MODE, timer)
-        self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)
         bessel.add_updater(vibrate)
 
+        surface_group = VGroup(axes, bessel)
+        surface_group.scale(0.8)
+
+        diffyq = MathTex(
+            r"x^2 \frac{d^2y}{dx^2} + x \frac{dy}{dx} + (x^2 - n^2)y = 0", font_size=56
+        )
+        order_and_mode = MathTex(f"n={ORDER}, m={MODE}", font_size=44)
+
+        self.play(Write(diffyq))
+        self.play(diffyq.animate.scale(0.6))
+        self.play(diffyq.animate.to_corner(UL))
+        self.add_fixed_in_frame_mobjects(diffyq)
+
+        self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)
+
         self.begin_ambient_camera_rotation(rate=0.1)
-        self.add(axes, bessel)
-        self.wait(4)
+        # self.add(surface_group)
+
+        self.play(FadeIn(axes, bessel))
+
+        # self.add_fixed_in_frame_mobjects(order_and_mode.align_to(surface_group, DOWN))
+        self.add_fixed_in_frame_mobjects(order_and_mode)
+        self.remove(order_and_mode)
+        # self.play(Write(order_and_mode.align_to(surface_group, DOWN)))
+
+        # VGroup(surface_group, order_and_mode).arrange(DOWN)
+        self.play(Write(order_and_mode.move_to(np.array([0, -3.0, 0]))))
+
+        self.wait(2)
         self.stop_ambient_camera_rotation()
+
+        # align_to(mobject_or_point, direction=array([0., -1., 0.]), alignment_vect=array([0., 1., 0.]))
