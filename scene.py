@@ -91,61 +91,53 @@ class Check(ThreeDScene):
         MODES = [1, 2]
         timer = 0
 
+        def create_bessel(scene, orders, modes):
+            bessel = BesselSurface(BOUNDARY, orders, modes, timer)
+            bessel.add_updater(vibrate)
+            label = MathTex(f"n={orders}, m={modes}", font_size=44)
+            scene.add_fixed_in_frame_mobjects(label)
+            scene.remove(label)
+            label.move_to(np.array([0, -3.0, 0]))
+            return bessel, label
+
+        def transition(scene, outgoing_bessel, outgoing_label, incoming_bessel, incoming_label):
+            outgoing_bessel.clear_updaters()
+            scene.remove(outgoing_bessel)
+            scene.play(Transform(outgoing_label, incoming_label), Create(incoming_bessel))
+
+
         def vibrate(surface: BesselSurface, dt):
             nonlocal timer
             timer += dt
-            print(f"{surface.orders}: {timer}")
             surface.become(BesselSurface(BOUNDARY, surface.orders, surface.modes, timer))
 
         axes = ThreeDAxes(x_range=[-3, 3], y_range=[-3, 3], z_range=[-3, 3])
         
+        b1, l1 = create_bessel(self, [0], [1])
+        b2, l2 = create_bessel(self, [1], [1])
+        b3, l3 = create_bessel(self, [3], [2])
+        b4, l4 = create_bessel(self, [4], [5])
+        b5, l5 = create_bessel(self, [0, 1, 2, 3, 4], [1, 2, 3, 4, 5])
 
-        bessel1 = BesselSurface(BOUNDARY, [0], [1], timer)
-        bessel1.add_updater(vibrate)
-
-        bessel2 = BesselSurface(BOUNDARY, [1], [1], timer)
-        bessel2.add_updater(vibrate)
-
-        surface_group = VGroup(axes, bessel1)
+        surface_group = VGroup(axes, b1)
         surface_group.scale(0.8)
 
-        order_and_mode1 = MathTex(f"n={[0]}, m={[1]}", font_size=44)
-        order_and_mode1.move_to(np.array([0, -3.0, 0]))
-        order_and_mode2 = MathTex(f"n={[1]}, m={[1]}", font_size=44)
-        order_and_mode2.move_to(np.array([0, -3.0, 0]))
-
-        # diffyq = MathTex(
-        #     r"x^2 \frac{d^2y}{dx^2} + x \frac{dy}{dx} + (x^2 - n^2)y = 0", font_size=56
-        # )
-
-        # self.play(Write(diffyq))
-        # self.play(diffyq.animate.scale(0.6))
-        # self.play(diffyq.animate.to_corner(UL))
-        # self.add_fixed_in_frame_mobjects(diffyq)
-
         self.set_camera_orientation(theta=70 * DEGREES, phi=75 * DEGREES)
-
-        # Start the ambient camera rotation.
         self.begin_ambient_camera_rotation(rate=0.1)
 
         # Fade in the surface and axes, TODO this isn't fading in the surface...
-        self.play(FadeIn(axes), Create(bessel1))
-
-        # This is the janky way to make a mob fixed in frame but not appear
-        self.add_fixed_in_frame_mobjects(order_and_mode1)
-        self.remove(order_and_mode1)
-
-        # Add the order and mode label to the surface group and render it
-        surface_group.add(order_and_mode1)
-        self.play(Write(order_and_mode1))
-
-        self.wait(2)
-
-        # remove and create transition
-        bessel1.clear_updaters()
-        self.remove(bessel1)
-        self.play(Transform(order_and_mode1, order_and_mode2), Create(bessel2))
-
+        self.play(FadeIn(axes), Create(b1))
+        self.wait(1)
+        self.play(Write(l1))
+        self.wait(3)
+        
+        transition(self, b1, l1, b2, l2)
+        self.wait(3)
+        transition(self, b2, l2, b3, l3)
+        self.wait(3)
+        transition(self, b3, l3, b4, l4)
+        self.wait(3)
+        transition(self, b4, l4, b5, l5)
         self.wait(3)
 
         self.stop_ambient_camera_rotation()
